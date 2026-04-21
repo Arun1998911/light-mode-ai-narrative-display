@@ -3,7 +3,7 @@
 //   1 = Blank + typewriter "We know your questions."
 //   2 = Typewriter exits
 //   3 = Sequential typewriter questions (auto, one by one)
-//   4 = Solutions (manual tab clicks)
+//   4 = Solutions (manual tab clicks)sdsdf
 
 const TIMING = {
   holdHero: 2800,
