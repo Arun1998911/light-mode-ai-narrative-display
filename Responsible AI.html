@@ -1,0 +1,1030 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Responsible AI — Knolskape</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif&family=JetBrains+Mono:wght@400;500&family=Geist:wght@300;400;500;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f5f0eb;
+    --bg-2: #ede8e1;
+    --ink: #1c1917;
+    --ink-dim: #44403c;
+    --ink-mute: #78716c;
+    --ink-faint: #a8a29e;
+    --line: #d6cfc7;
+    --line-2: #e5dfd8;
+    --chip: #ece7e1;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0; background: var(--bg); color: var(--ink);
+    font-family: 'Geist', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-feature-settings: 'ss01' on, 'cv11' on;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+  .mono { font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace; letter-spacing: -0.01em; }
+  .serif { font-family: 'Instrument Serif', 'Times New Roman', serif; font-style: italic; }
+  body {
+    background:
+      radial-gradient(1200px 600px at 50% -10%, rgba(0,0,0,0.03), transparent 60%),
+      radial-gradient(800px 500px at 90% 110%, rgba(0,0,0,0.02), transparent 60%),
+      var(--bg);
+  }
+  .grain::before {
+    content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 100;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.04 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+    mix-blend-mode: multiply; opacity: 0.7;
+  }
+  @keyframes caretBlink { 50% { opacity: 0; } }
+  @keyframes fadeUp { from { opacity:0; transform:translateY(8px);} to { opacity:1; transform:translateY(0);} }
+  @keyframes bgFadeIn { from { opacity:0; filter:blur(6px); } to { opacity:1; filter:blur(2px); } }
+  @keyframes ctaPulse {
+    0%, 100% { box-shadow: 0 0 40px rgba(41,37,36,0.18), 0 8px 32px rgba(0,0,0,0.15); }
+    50%       { box-shadow: 0 0 70px rgba(41,37,36,0.3), 0 8px 32px rgba(0,0,0,0.15); }
+  }
+  @keyframes answerIn {
+    from { opacity: 0; transform: translateX(16px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+  @keyframes paraIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+</style>
+</head>
+<body class="grain">
+  <div id="root"></div>
+
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+  <script type="text/babel">
+// ─── Image asset map ────────────────────────────────────────────────────────
+const IMG = {
+  knolskape_logo:     'project/src/Knolskapelightlogo.png',
+  AccuracyAIlogo:     'project/src/AccuracyAIlogo.jpg',
+  Datasecuritylogo:   'project/src/Datasecuritylogo.png',
+  controllogo:        'project/src/controllogo.jpg',
+  ExplainableAIlogo:  'project/src/ExplainableAIlogo.jpg',
+  AIaccuracyques1:    'project/src/AIaccuracyques1image.png',
+  AIaccuracyques2:    'project/src/AIaccuracyques2image.avif',
+  AIaccuracyques3:    'project/src/AIAccuracyques3image.webp',
+};
+
+// ─── Orb ────────────────────────────────────────────────────────────────────
+const Orb = () => {
+  const [t, setT] = React.useState(0);
+  React.useEffect(() => {
+    let raf;
+    const start = performance.now();
+    const tick = (now) => { setT((now - start) / 1000); raf = requestAnimationFrame(tick); };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, []);
+
+  const r1 = (t * 18) % 360;
+  const r2 = (-t * 11) % 360;
+  const r3 = (t * 7) % 360;
+  const pulse = 1 + Math.sin(t * 1.6) * 0.04;
+
+  const dots = Array.from({ length: 14 }, (_, i) => {
+    const angle = (i / 14) * Math.PI * 2 + t * 0.35;
+    const radius = 168 + Math.sin(t * 0.8 + i) * 4;
+    return {
+      x: Math.cos(angle) * radius, y: Math.sin(angle) * radius,
+      o: 0.25 + (Math.sin(t * 1.2 + i * 0.5) + 1) * 0.25,
+      r: 1.2 + (i % 3 === 0 ? 1.4 : 0),
+    };
+  });
+
+  const ticks = Array.from({ length: 60 }, (_, i) => {
+    const a = (i / 60) * Math.PI * 2;
+    const long = i % 5 === 0;
+    return {
+      x1: Math.cos(a) * 210, y1: Math.sin(a) * 210,
+      x2: Math.cos(a) * (long ? 222 : 217), y2: Math.sin(a) * (long ? 222 : 217),
+      o: long ? 0.7 : 0.25,
+    };
+  });
+
+  return (
+    <div style={{ position: 'relative', width: 520, height: 520 }}>
+      <svg viewBox="-260 -260 520 520" width="520" height="520" style={{ display: 'block' }}>
+        <defs>
+          <radialGradient id="core" cx="0" cy="0" r="0.5">
+            <stop offset="0%"   stopColor="#44403c" stopOpacity="0.9" />
+            <stop offset="35%"  stopColor="#78716c" stopOpacity="0.5" />
+            <stop offset="70%"  stopColor="#a8a29e" stopOpacity="0.15" />
+            <stop offset="100%" stopColor="#f5f0eb" stopOpacity="0" />
+          </radialGradient>
+          <radialGradient id="halo" cx="0" cy="0" r="0.5">
+            <stop offset="0%"   stopColor="#1c1917" stopOpacity="0.0" />
+            <stop offset="60%"  stopColor="#1c1917" stopOpacity="0.04" />
+            <stop offset="100%" stopColor="#1c1917" stopOpacity="0" />
+          </radialGradient>
+          <linearGradient id="scan" x1="0" x2="0" y1="-1" y2="1">
+            <stop offset="0%"   stopColor="#44403c" stopOpacity="0" />
+            <stop offset="50%"  stopColor="#44403c" stopOpacity="0.3" />
+            <stop offset="100%" stopColor="#44403c" stopOpacity="0" />
+          </linearGradient>
+          <clipPath id="coreClip"><circle cx="0" cy="0" r="100" /></clipPath>
+          <pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse">
+            <path d="M10 0 L0 0 0 10" fill="none" stroke="#78716c" strokeWidth="0.4" opacity="0.18" />
+          </pattern>
+        </defs>
+
+        <circle cx="0" cy="0" r="240" fill="url(#halo)" />
+        <g>
+          {ticks.map((tk, i) => (
+            <line key={i} x1={tk.x1} y1={tk.y1} x2={tk.x2} y2={tk.y2}
+              stroke="#78716c" strokeOpacity={tk.o} strokeWidth="1" />
+          ))}
+        </g>
+        <g transform={`rotate(${r1})`}>
+          <circle cx="0" cy="0" r="200" fill="none" stroke="#78716c" strokeOpacity="0.18" strokeWidth="1" />
+          <circle cx="0" cy="0" r="200" fill="none" stroke="#78716c" strokeOpacity="0.5" strokeWidth="1.2" strokeDasharray="2 14" />
+        </g>
+        <g transform={`rotate(${r2})`}>
+          <ellipse cx="0" cy="0" rx="180" ry="60" fill="none" stroke="#78716c" strokeOpacity="0.35" strokeWidth="1" />
+          <ellipse cx="0" cy="0" rx="180" ry="60" fill="none" stroke="#78716c" strokeOpacity="0.7" strokeWidth="1" strokeDasharray="1 10" />
+        </g>
+        <g transform={`rotate(${60 + r3})`}>
+          <ellipse cx="0" cy="0" rx="60" ry="180" fill="none" stroke="#78716c" strokeOpacity="0.25" strokeWidth="1" />
+        </g>
+        <g transform={`rotate(${-30 + r2 * 0.5})`}>
+          <ellipse cx="0" cy="0" rx="140" ry="140" fill="none" stroke="#78716c" strokeOpacity="0.12" strokeWidth="1" />
+        </g>
+        {dots.map((d, i) => (
+          <circle key={i} cx={d.x} cy={d.y} r={d.r} fill="#78716c" opacity={d.o} />
+        ))}
+        <g transform={`scale(${pulse})`}>
+          <circle cx="0" cy="0" r="100" fill="url(#core)" />
+          <g clipPath="url(#coreClip)">
+            <rect x="-100" y="-100" width="200" height="200" fill="url(#grid)" />
+            <rect x="-100" y={-100 + ((t * 80) % 200)} width="200" height="40" fill="url(#scan)" opacity="0.35" />
+            <line x1="-100" y1="0" x2="100" y2="0" stroke="#78716c" strokeOpacity="0.4" strokeWidth="0.6" />
+            <line x1="0" y1="-100" x2="0" y2="100" stroke="#78716c" strokeOpacity="0.4" strokeWidth="0.6" />
+          </g>
+          <circle cx="0" cy="0" r="100" fill="none" stroke="#78716c" strokeOpacity="0.85" strokeWidth="1.2" />
+          <circle cx="0" cy="0" r="112" fill="none" stroke="#78716c" strokeOpacity="0.18" strokeWidth="1" />
+        </g>
+        <g opacity="0.9">
+          <circle cx="0" cy="0" r="2" fill="#44403c" />
+          <circle cx="0" cy="0" r="6" fill="none" stroke="#78716c" strokeWidth="0.6" opacity="0.6" />
+        </g>
+        {[[-230,-230,1,1],[230,-230,-1,1],[-230,230,1,-1],[230,230,-1,-1]].map(([x,y,sx,sy],i) => (
+          <g key={i} transform={`translate(${x}, ${y})`}>
+            <path d={`M0 0 L${20*sx} 0 M0 0 L0 ${20*sy}`} stroke="#78716c" strokeOpacity="0.5" strokeWidth="1" />
+          </g>
+        ))}
+      </svg>
+      <div className="mono" style={{ position:'absolute', top:8, left:8, fontSize:10, color:'var(--ink-mute)', letterSpacing:'0.08em' }}>SYS / RAI · v2.4</div>
+      <div className="mono" style={{ position:'absolute', top:8, right:8, fontSize:10, color:'var(--ink-mute)', letterSpacing:'0.08em' }}>{`T+${t.toFixed(2).padStart(6,'0')}s`}</div>
+      <div className="mono" style={{ position:'absolute', bottom:8, left:8, fontSize:10, color:'var(--ink-mute)', letterSpacing:'0.08em' }}>{`Θ ${(r1 * Math.PI / 180).toFixed(3)}rad`}</div>
+      <div className="mono" style={{ position:'absolute', bottom:8, right:8, fontSize:10, color:'var(--ink-mute)', letterSpacing:'0.08em' }}>STATUS · NOMINAL</div>
+    </div>
+  );
+};
+
+// ─── Questions data ──────────────────────────────────────────────────────────
+const QUESTIONS = [
+  "Can the AI explain why it gave certain feedback or scores?",
+  "How transparent is the AI in explaining its reasoning?",
+  "Who owns the learner data generated?",
+  "How do we measure ROI from an AI-enhanced learning experience?",
+  "How does it handle nuanced, open-ended experiential tasks vs. just multiple choice?",
+  "How do we know the AI's assessments are fair and unbiased?",
+  "How do we prevent learners from gaming or misusing the AI?",
+  "Can personally identifiable information (PII) be exposed?",
+  "Is the model a black box, or is the logic auditable?",
+  "Where is data stored, and for how long?",
+  "What controls exist to set guardrails on AI behavior?",
+  "What happens when the AI gives wrong feedback or hallucinations?",
+  "What happens if the AI goes down — is learning disrupted?",
+  "Is the AI equitable across different demographics, cultures, and languages?",
+];
+
+const BG_SLOTS = [
+  { x:10, y:12, size:13 }, { x:62, y:7,  size:15 },
+  { x:84, y:18, size:12 }, { x:22, y:28, size:14 },
+  { x:75, y:32, size:13 }, { x:8,  y:48, size:16 },
+  { x:55, y:50, size:12 }, { x:88, y:55, size:13 },
+  { x:32, y:65, size:15 }, { x:70, y:70, size:12 },
+  { x:12, y:80, size:13 }, { x:52, y:85, size:14 },
+  { x:28, y:90, size:12 }, { x:80, y:88, size:13 },
+];
+
+// ─── Background question chip ────────────────────────────────────────────────
+const BgQuestion = ({ text, slot, idx, clear }) => {
+  const seed = (idx + 1) * 13.7;
+  const rot = ((seed % 5) - 2.5);
+  return (
+    <div style={{
+      position: 'absolute',
+      left: `${slot.x}%`, top: `${slot.y}%`,
+      transform: `translate(-50%, -50%) rotate(${rot}deg)`,
+      maxWidth: 260,
+      fontSize: slot.size,
+      lineHeight: 1.4,
+      letterSpacing: '-0.005em',
+      color: clear ? 'var(--ink-dim)' : 'rgba(28,25,23,0.18)',
+      filter: clear ? 'blur(0px)' : 'blur(2px)',
+      fontFamily: clear ? "'Cormorant Garamond', serif" : "'Geist', sans-serif",
+      fontWeight: 400,
+      userSelect: 'none',
+      pointerEvents: 'none',
+      transition: 'color 900ms ease, filter 900ms ease',
+      animation: 'bgFadeIn 900ms cubic-bezier(.2,.8,.2,1) both',
+    }}>
+      {text}
+    </div>
+  );
+};
+
+// ─── Typewriter (center, for questions) ─────────────────────────────────────
+const TypewriterCenter = ({ text, onDone }) => {
+  const [n, setN] = React.useState(0);
+  const doneRef = React.useRef(false);
+
+  React.useEffect(() => { setN(0); doneRef.current = false; }, [text]);
+
+  React.useEffect(() => {
+    if (n >= text.length) {
+      if (!doneRef.current) {
+        doneRef.current = true;
+        const t = setTimeout(onDone, 500);
+        return () => clearTimeout(t);
+      }
+      return;
+    }
+    const id = setTimeout(() => setN(c => c + 1), 32);
+    return () => clearTimeout(id);
+  }, [n, text, onDone]);
+
+  return (
+    <span>
+      {text.slice(0, n)}
+      <span style={{
+        display: 'inline-block', width: '0.5ch', height: '1em',
+        background: 'var(--ink)', verticalAlign: 'text-bottom', marginLeft: 2,
+        animation: 'caretBlink 0.8s steps(1) infinite',
+        opacity: n >= text.length ? 0 : 1,
+      }} />
+    </span>
+  );
+};
+
+// ─── Sequential questions (scene 3) ─────────────────────────────────────────
+const SequentialQuestions = ({ onAllDone, allDone }) => {
+  const [currentIdx, setCurrentIdx] = React.useState(0);
+  const [bgQuestions, setBgQuestions] = React.useState([]);
+  const [exiting, setExiting] = React.useState(false);
+  const [done, setDone] = React.useState(false);
+
+  const handleTyped = React.useCallback(() => {
+    const idx = currentIdx;
+    setExiting(true);
+    setTimeout(() => {
+      setBgQuestions(prev => [...prev, { text: QUESTIONS[idx], slot: BG_SLOTS[idx], idx }]);
+      setExiting(false);
+      if (idx + 1 >= QUESTIONS.length) {
+        setDone(true);
+        onAllDone && onAllDone();
+      } else {
+        setCurrentIdx(idx + 1);
+      }
+    }, 600);
+  }, [currentIdx, onAllDone]);
+
+  return (
+    <div style={{ position: 'absolute', inset: 0 }}>
+      {bgQuestions.map((bq) => (
+        <BgQuestion key={bq.idx} text={bq.text} slot={bq.slot} idx={bq.idx} clear={done || allDone} />
+      ))}
+      {!done && (
+        <div style={{
+          position: 'absolute', top: '50%', left: '50%',
+          width: 'min(760px, 82vw)',
+          textAlign: 'center',
+          opacity: exiting ? 0 : 1,
+          filter: exiting ? 'blur(6px)' : 'blur(0px)',
+          transform: `translate(-50%, -50%) scale(${exiting ? 0.94 : 1})`,
+          transition: 'opacity 500ms cubic-bezier(.6,0,.2,1), filter 500ms, transform 500ms cubic-bezier(.6,0,.2,1)',
+          pointerEvents: 'none',
+        }}>
+          <div className="mono" style={{ fontSize:10, letterSpacing:'0.24em', color:'var(--ink-faint)', marginBottom:20 }}>
+            Q{String(currentIdx + 1).padStart(2, '0')} / {QUESTIONS.length}
+          </div>
+          <div style={{
+            fontSize: 'clamp(26px, 3.4vw, 46px)',
+            lineHeight: 1.25, letterSpacing: '-0.01em',
+            fontWeight: 500, color: 'var(--ink)',
+            fontFamily: "'Cormorant Garamond', 'Times New Roman', serif",
+          }}>
+            <TypewriterCenter key={currentIdx} text={QUESTIONS[currentIdx]} onDone={handleTyped} />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ─── Solutions data ──────────────────────────────────────────────────────────
+const TABS_DATA = [
+  {
+    label: "AI Accuracy\n& Reliability",
+    short: "AI Accuracy",
+    icon: IMG.AccuracyAIlogo,
+    qa: [
+      {
+        q: "What happens when the AI gives wrong feedback or hallucinations?",
+        keywords: ["Confidence Gating", "Human-in-the-Loop", "Feedback Correction Loop"],
+        a: `We've implemented a Confidence Gating System. Every AI output carries a confidence score. Below a defined threshold, the response is automatically flagged and routed to a Human-in-the-Loop (HITL) review queue before the learner ever sees it.
+
+On top of that, we run semantic consistency checks — if an AI response contradicts established rubric anchors or factual knowledge in your content library, it's caught at the output layer.
+
+We also maintain a Feedback Correction Loop — every instructor override trains the model to reduce that error class going forward.`,
+      },
+      {
+        q: "How do we know the AI's assessments are fair and unbiased?",
+        keywords: ["DIF Analysis", "Third-Party Auditors", "Quarterly Bias Testing"],
+        a: `We run differential item functioning (DIF) analysis — a psychometric method used in standardised testing — across demographic subgroups after every model update. If any evaluation construct shows statistical variance across gender, language background, or geography, it triggers an automatic model review.
+
+We also partner with third-party AI auditors who run independent bias testing on a quarterly basis. The reports are available to enterprise clients.
+
+We don't self-certify fairness — we verify it externally.`,
+      },
+      {
+        q: "How transparent is the AI in explaining its reasoning?",
+        keywords: ["Explainable AI (XAI)", "Attention Mapping", "Decision Audit Report"],
+        a: `We implement Explainable AI (XAI) using attention mapping and rubric-trace outputs — every piece of feedback shows which part of the learner's response drove the evaluation, which rubric criterion it mapped to, and what a stronger response would look like.
+
+This isn't a summary — it's a traceable reasoning chain. Instructors can pull a full Decision Audit Report for any learner interaction, exportable as a structured JSON or PDF for compliance purposes.`,
+      },
+    ],
+  },
+  {
+    label: "Data Privacy\n& Security",
+    short: "Data Privacy",
+    icon: IMG.Datasecuritylogo,
+    qa: [
+      {
+        q: "Who owns the learner data generated?",
+        keywords: ["Data Sovereignty", "GDPR Article 28", "Isolated Tenants"],
+        a: `Contractually and architecturally — you do. We enforce data sovereignty through isolated tenant environments. Your data never co-mingles with another organization's data.
+
+We operate as a Data Processor under GDPR Article 28, meaning we have zero legal basis to use your data for anything outside of delivering the contracted service — including model training.
+
+This is enforced at the infrastructure level, not just in policy.`,
+      },
+      {
+        q: "Where is data stored, and for how long?",
+        keywords: ["Data Residency", "Data Lifecycle Manager", "GDPR Article 17"],
+        a: `Data residency is customer-configurable — you choose AWS, Azure, or GCP, and the specific region (US, EU, APAC). Retention is governed by policies your admin team sets through our Data Lifecycle Manager.
+
+We support automated purge schedules, right-to-erasure workflows compliant with GDPR Article 17, and full audit trails of every deletion event.`,
+      },
+      {
+        q: "Can personally identifiable information (PII) be exposed?",
+        keywords: ["PII Tokenization", "SOC 2 Type II", "Non-Reversible Tokens"],
+        a: `PII never touches our AI inference layer. We use a PII Tokenization Pipeline at data ingestion — names, emails, employee IDs, and demographic identifiers are replaced with non-reversible tokens before any data reaches the model.
+
+Our AI literally cannot see who a learner is — it only sees learning behavior.
+
+This is validated in our annual SOC 2 Type II audit and penetration testing reports, which we share with enterprise clients under NDA.`,
+      },
+    ],
+  },
+  {
+    label: "Control &\nFool-Proof AI",
+    short: "Control",
+    icon: IMG.controllogo,
+    qa: [
+      {
+        q: "How do we prevent learners from gaming or misusing the AI?",
+        keywords: ["Behavioral Integrity Monitoring", "Anomaly Detection", "Adaptive Tasks"],
+        a: `Our platform uses Behavioral Integrity Monitoring — a real-time anomaly detection layer that flags signals like: response time outliers, high semantic similarity to source material (plagiarism patterns), repetitive prompt injection attempts, and answer-fishing loops.
+
+When gaming behavior is detected, the system doesn't penalize — it adapts the task variant to a form that cannot be gamed the same way.
+
+The learner hits a wall of genuine challenge, not a punitive message.`,
+      },
+      {
+        q: "What controls exist to set guardrails on AI behavior?",
+        keywords: ["Policy Configuration Console", "Constitutional AI", "Output Filters"],
+        a: `Admins access a Policy Configuration Console where they define: topic boundaries (what the AI will and won't engage with), response tone and formality profiles, competency scope per cohort, and intervention thresholds.
+
+Under the hood, these translate into system-level prompt constraints and output filters enforced before any response is surfaced.
+
+We also support Constitutional AI-style rule sets — you define the principles, the model is bound by them at inference time, not just at training.`,
+      },
+    ],
+  },
+  {
+    label: "Explainable &\nAuditable AI",
+    short: "Explainable",
+    icon: IMG.ExplainableAIlogo,
+    qa: [
+      {
+        q: "Can the AI explain why it gave certain feedback or scores?",
+        keywords: ["Rubric Trace Output", "EU AI Act", "Structured Breakdown"],
+        a: `Every score is generated with a Rubric Trace Output — a structured breakdown showing: which competency was assessed, what evidence in the learner's response supported the score, which scoring band it fell into, and what the delta is to the next performance level.
+
+This is rendered in natural language for the learner, and as a structured data object for instructors and administrators.
+
+It was designed to meet the explainability requirements under the EU AI Act — not just as a feature, but as a compliance posture.`,
+      },
+      {
+        q: "Is the model a black box, or is the logic auditable?",
+        keywords: ["Model Card", "Immutable Audit Log", "GRC Integration"],
+        a: `Fully auditable. We maintain a Model Card for every version of our evaluation model — documenting training data sources, evaluation benchmarks, known limitations, and bias test results.
+
+Every inference event is logged with a unique transaction ID, timestamped, and stored in an immutable audit log for 12 months by default.
+
+For regulated industries, we support integration with your GRC platforms and can produce audit packages for internal or external review on demand.`,
+      },
+    ],
+  },
+];
+
+const QA_IMAGES = {
+  "0-0": IMG.AIaccuracyques1,
+  "0-1": IMG.AIaccuracyques2,
+  "0-2": IMG.AIaccuracyques3,
+};
+
+// ─── Highlighted answer text ─────────────────────────────────────────────────
+const HighlightedAnswer = ({ text, keywords }) => {
+  const pattern = new RegExp(`(${keywords.map(k => k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})`, 'gi');
+  const splits = text.split(pattern);
+  return (
+    <span>
+      {splits.map((part, i) => {
+        const isKw = keywords.some(k => k.toLowerCase() === part.toLowerCase());
+        return isKw
+          ? <span key={i} style={{ color:'#292524', fontWeight:600, borderBottom:'1px solid rgba(41,37,36,0.2)' }}>{part}</span>
+          : <span key={i}>{part}</span>;
+      })}
+    </span>
+  );
+};
+
+// ─── Solutions screen (scene 4) ──────────────────────────────────────────────
+const SolutionsScreen = ({ visible }) => {
+  const [activeTab, setActiveTab] = React.useState(0);
+  const [activeQ, setActiveQ] = React.useState(0);
+  const [tabMounted, setTabMounted] = React.useState(false);
+  const [answerKey, setAnswerKey] = React.useState(0);
+
+  React.useEffect(() => {
+    if (visible) {
+      const t = setTimeout(() => setTabMounted(true), 200);
+      return () => clearTimeout(t);
+    } else {
+      setTabMounted(false);
+    }
+  }, [visible]);
+
+  const handleTabChange = (i) => {
+    setActiveTab(i);
+    setActiveQ(0);
+    setAnswerKey(k => k + 1);
+  };
+
+  const handleQChange = (i) => {
+    setActiveQ(i);
+    setAnswerKey(k => k + 1);
+  };
+
+  const tab = TABS_DATA[activeTab];
+  const qItem = tab.qa[activeQ];
+
+  return (
+    <div style={{
+      position: 'absolute', inset: 0,
+      opacity: visible ? 1 : 0,
+      transition: 'opacity 600ms ease',
+      pointerEvents: visible ? 'auto' : 'none',
+      display: 'flex', flexDirection: 'column',
+    }}>
+      {/* Tab bar */}
+      <div style={{
+        display: 'flex', gap: 0,
+        padding: '52px 32px 0',
+        borderBottom: '1px solid var(--line)',
+        flexShrink: 0,
+      }}>
+        {TABS_DATA.map((t, i) => {
+          const active = activeTab === i;
+          return (
+            <button key={i} onClick={() => handleTabChange(i)} style={{
+              flex: 1, background: active ? 'rgba(41,37,36,0.06)' : 'transparent',
+              border: 'none',
+              borderBottom: '2px solid transparent',
+              padding: '14px 20px 20px',
+              cursor: 'pointer', textAlign: 'left',
+              color: active ? '#1c1917' : 'var(--ink-mute)',
+              opacity: tabMounted ? 1 : 0,
+              transform: tabMounted ? 'translateY(0)' : 'translateY(12px)',
+              transition: `opacity 400ms ${i * 70}ms, transform 400ms ${i * 70}ms, background 200ms, color 200ms`,
+              fontFamily: "'Geist', sans-serif",
+              position: 'relative',
+              boxShadow: active ? 'inset 0 -2px 0 #a855f7, 0 0 24px rgba(41,37,36,0.1)' : 'none',
+            }}>
+              <div style={{
+                width: 36, height: 36, borderRadius: 10, overflow: 'hidden',
+                marginBottom: 8,
+                opacity: active ? 1 : 0.45,
+                transition: 'opacity 220ms, box-shadow 300ms',
+                boxShadow: active ? '0 0 14px rgba(41,37,36,0.25)' : 'none',
+                flexShrink: 0,
+              }}>
+                <img src={t.icon} alt={t.short} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              </div>
+              <div style={{
+                fontSize: 13, fontWeight: active ? 500 : 400,
+                lineHeight: 1.3, letterSpacing: '-0.01em',
+                whiteSpace: 'pre-line',
+                color: active ? '#292524' : 'var(--ink-mute)',
+                transition: 'color 220ms',
+              }}>
+                {t.label}
+              </div>
+              <div className="mono" style={{
+                marginTop: 6, fontSize: 9,
+                color: active ? '#292524' : 'var(--ink-faint)',
+                letterSpacing: '0.12em', transition: 'color 220ms',
+              }}>
+                {t.qa.length} Q{t.qa.length > 1 ? 'S' : ''}
+              </div>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Split panel */}
+      <div style={{
+        flex: 1, display: 'flex', overflow: 'hidden',
+        opacity: tabMounted ? 1 : 0,
+        transition: 'opacity 500ms 350ms',
+      }}>
+        {/* Left: question list */}
+        <div style={{
+          width: 300, flexShrink: 0,
+          borderRight: '1px solid var(--line)',
+          overflowY: 'auto',
+          padding: '28px 0',
+        }}>
+          <div className="mono" style={{
+            fontSize: 9, letterSpacing: '0.22em', color: 'var(--ink-faint)',
+            padding: '0 20px 14px',
+          }}>
+            QUESTIONS
+          </div>
+          {tab.qa.map((item, i) => {
+            const active = activeQ === i;
+            return (
+              <button key={i} onClick={() => handleQChange(i)} style={{
+                width: '100%', border: 'none',
+                padding: '14px 20px',
+                textAlign: 'left', cursor: 'pointer',
+                borderLeft: active ? '2px solid #292524' : '2px solid transparent',
+                display: 'flex', flexDirection: 'column', gap: 6,
+                background: active ? 'rgba(41,37,36,0.06)' : 'transparent',
+                transition: 'background 200ms, border-color 200ms',
+                fontFamily: "'Geist', sans-serif",
+              }}>
+                <div className="mono" style={{
+                  fontSize: 9, letterSpacing: '0.16em',
+                  color: active ? 'var(--ink-mute)' : 'var(--ink-faint)',
+                }}>
+                  Q{String(i + 1).padStart(2, '0')}
+                </div>
+                <div style={{
+                  fontSize: 12.5, lineHeight: 1.45, letterSpacing: '-0.005em',
+                  color: active ? '#1c1917' : 'var(--ink-mute)',
+                  transition: 'color 200ms',
+                }}>
+                  {item.q}
+                </div>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Right: answer */}
+        <div key={answerKey} style={{
+          flex: 1, overflowY: 'auto',
+          padding: '40px 52px',
+          animation: 'answerIn 420ms cubic-bezier(.2,.8,.2,1)',
+        }}>
+          {/* Solution area header */}
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 16, marginBottom: 32,
+            padding: '16px 20px',
+            background: 'rgba(41,37,36,0.06)',
+            border: '1px solid rgba(41,37,36,0.12)',
+            borderRadius: 14,
+          }}>
+            <div style={{
+              width: 60, height: 60, borderRadius: 12, overflow: 'hidden', flexShrink: 0,
+              boxShadow: '0 0 22px rgba(41,37,36,0.2)',
+            }}>
+              <img src={tab.icon} alt={tab.short} style={{ width:'100%', height:'100%', objectFit:'cover' }} />
+            </div>
+            <div>
+              <div className="mono" style={{ fontSize:9, letterSpacing:'0.2em', color:'#292524', marginBottom:4 }}>
+                SOLUTION AREA
+              </div>
+              <div style={{
+                fontSize: 18, fontWeight: 500, letterSpacing: '-0.02em',
+                color: '#1c1917', lineHeight: 1.2, whiteSpace: 'pre-line',
+              }}>
+                {tab.label}
+              </div>
+            </div>
+          </div>
+
+          <div className="mono" style={{
+            fontSize: 10, letterSpacing: '0.22em', color: 'var(--ink-faint)',
+            marginBottom: 18, display: 'flex', alignItems: 'center', gap: 12,
+          }}>
+            <span style={{ width:20, height:1, background:'var(--ink-faint)' }} />
+            KNOLSKAPE'S ANSWER
+          </div>
+
+          <h2 style={{
+            margin: '0 0 32px', padding: 0,
+            fontSize: 'clamp(20px, 2.4vw, 32px)', fontWeight: 500,
+            lineHeight: 1.25, letterSpacing: '-0.025em',
+            color: '#1c1917',
+          }}>
+            {qItem.q}
+          </h2>
+
+          {/* Keyword chips */}
+          <div style={{ display:'flex', flexWrap:'wrap', gap:8, marginBottom:36 }}>
+            {qItem.keywords.map((kw, i) => (
+              <span key={i} className="mono" style={{
+                fontSize: 10, letterSpacing: '0.12em',
+                padding: '5px 10px',
+                border: '1px solid var(--line)',
+                borderRadius: 99, color: 'var(--ink-mute)',
+              }}>
+                {kw}
+              </span>
+            ))}
+          </div>
+
+          {/* Answer paragraphs */}
+          <div style={{ display:'flex', flexDirection:'column', gap:20 }}>
+            {qItem.a.trim().split('\n\n').map((para, i) => (
+              <p key={i} style={{
+                margin: 0,
+                fontSize: 15.5, lineHeight: 1.75,
+                letterSpacing: '-0.005em',
+                color: 'var(--ink-dim)',
+                animation: `paraIn 500ms cubic-bezier(.2,.8,.2,1) both`,
+                animationDelay: `${80 + i * 100}ms`,
+              }}>
+                <HighlightedAnswer text={para} keywords={qItem.keywords} />
+              </p>
+            ))}
+          </div>
+
+          {/* Supporting image */}
+          {QA_IMAGES[`${activeTab}-${activeQ}`] && (
+            <div style={{
+              marginTop: 36,
+              borderRadius: 16, overflow: 'hidden',
+              border: '1px solid var(--line)',
+              boxShadow: '0 8px 40px rgba(0,0,0,0.1)',
+              animation: 'paraIn 500ms cubic-bezier(.2,.8,.2,1) both',
+              animationDelay: '300ms',
+            }}>
+              <img
+                src={QA_IMAGES[`${activeTab}-${activeQ}`]}
+                alt="Supporting visual"
+                style={{ width:'100%', height:'auto', display:'block', maxHeight:340, objectFit:'cover' }}
+              />
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ─── App timing constants ────────────────────────────────────────────────────
+const TIMING = {
+  holdHero:  2800,
+  typeStart: 350,
+  typeSpeed: 55,
+  holdTyped: 1400,
+  exitDur:   700,
+  blankGap:  400,
+};
+
+// ─── Top bar ─────────────────────────────────────────────────────────────────
+const TopBar = () => (
+  <div style={{
+    position: 'absolute', top: 0, left: 0, right: 0,
+    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+    padding: '18px 36px', zIndex: 40,
+  }}>
+    <img
+      src={IMG.knolskape_logo}
+      alt="Knolskape"
+      style={{ height: 36, width: 'auto', objectFit: 'contain' }}
+    />
+  </div>
+);
+
+// ─── Scene 0: Hero ───────────────────────────────────────────────────────────
+const ResponsibleAIHero = ({ visible }) => (
+  <div style={{
+    position: 'absolute', inset: 0,
+    display: 'flex', flexDirection: 'column',
+    alignItems: 'center', justifyContent: 'center',
+    opacity: visible ? 1 : 0,
+    transform: visible ? 'scale(1)' : 'scale(0.96)',
+    transition: 'opacity 700ms cubic-bezier(.6,0,.2,1), transform 900ms cubic-bezier(.6,0,.2,1)',
+    pointerEvents: visible ? 'auto' : 'none',
+  }}>
+    <div className="mono" style={{
+      fontSize: 11, letterSpacing: '0.32em', color: 'var(--ink-mute)',
+      marginBottom: 22, display: 'flex', alignItems: 'center', gap: 12,
+    }}>
+      <span style={{ width:24, height:1, background:'var(--ink-faint)' }} />
+      A KNOLSKAPE POSITION PAPER
+      <span style={{ width:24, height:1, background:'var(--ink-faint)' }} />
+    </div>
+    <div style={{ position:'relative', display:'grid', placeItems:'center' }}>
+      <div style={{ position:'absolute', inset:0, display:'grid', placeItems:'center', opacity:0.75 }}>
+        <Orb />
+      </div>
+      <h1 style={{
+        position: 'relative', margin: 0, padding: 0,
+        fontSize: 'clamp(72px, 9vw, 120px)', lineHeight: 0.94,
+        fontWeight: 500, letterSpacing: '-0.045em',
+        textAlign: 'center', color: 'var(--ink)',
+        textShadow: '0 0 40px rgba(245,240,235,0.9), 0 0 80px rgba(245,240,235,0.6)',
+      }}>
+        Responsible<br />
+        <span className="serif" style={{
+          fontWeight: 400, letterSpacing: '-0.02em',
+          fontSize: 'clamp(84px, 10.5vw, 138px)',
+        }}>AI.</span>
+      </h1>
+    </div>
+  </div>
+);
+
+// ─── Scene 1/2: Typewriter panel ─────────────────────────────────────────────
+const Typewriter = ({ text, speed = 55, startDelay = 0, onDone }) => {
+  const [n, setN] = React.useState(0);
+  const [started, setStarted] = React.useState(false);
+
+  React.useEffect(() => {
+    const t = setTimeout(() => setStarted(true), startDelay);
+    return () => clearTimeout(t);
+  }, [startDelay]);
+
+  React.useEffect(() => {
+    if (!started) return;
+    if (n >= text.length) { onDone && onDone(); return; }
+    const id = setTimeout(() => setN(n + 1), speed);
+    return () => clearTimeout(id);
+  }, [n, started, text, speed, onDone]);
+
+  return (
+    <span>
+      {text.slice(0, n)}
+      <span style={{
+        display: 'inline-block', width: '0.55ch', marginLeft: 2,
+        background: 'var(--ink)', height: '0.9em',
+        animation: 'caretBlink 0.9s steps(1) infinite',
+        verticalAlign: 'middle',
+      }} />
+    </span>
+  );
+};
+
+const TypewriterPanel = ({ active, exiting, onDone }) => (
+  <div style={{
+    position: 'absolute', inset: 0,
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    opacity: active && !exiting ? 1 : 0,
+    transform: exiting ? 'translateY(-24px) scale(0.98)' : 'translateY(0) scale(1)',
+    transition: `opacity ${TIMING.exitDur}ms cubic-bezier(.6,0,.2,1), transform ${TIMING.exitDur}ms cubic-bezier(.6,0,.2,1)`,
+    pointerEvents: 'none',
+  }}>
+    <div style={{ width: 'min(1000px, 88vw)', textAlign: 'center' }}>
+      <div className="mono" style={{
+        fontSize: 11, letterSpacing: '0.32em', color: 'var(--ink-mute)', marginBottom: 18,
+      }}>
+        ── 14 RECURRING QUESTIONS FROM LEARNING LEADERS ──
+      </div>
+      <div style={{
+        fontSize: 'clamp(42px, 5.2vw, 72px)',
+        lineHeight: 1.05, letterSpacing: '-0.03em',
+        fontWeight: 500, color: 'var(--ink)',
+      }}>
+        {active && (
+          <Typewriter
+            text="We know your questions."
+            speed={TIMING.typeSpeed}
+            startDelay={TIMING.typeStart}
+            onDone={onDone}
+          />
+        )}
+      </div>
+    </div>
+  </div>
+);
+
+// ─── CTA button ───────────────────────────────────────────────────────────────
+const ExploreCTA = ({ visible, allDone, onClick }) => (
+  <div style={{
+    position: 'absolute',
+    bottom: allDone ? '50%' : '72px',
+    left: '50%',
+    transform: allDone ? 'translateX(-50%) translateY(50%)' : 'translateX(-50%)',
+    opacity: visible ? 1 : 0,
+    transition: 'opacity 600ms, bottom 900ms cubic-bezier(.4,0,.2,1), transform 900ms cubic-bezier(.4,0,.2,1)',
+    pointerEvents: visible ? 'auto' : 'none',
+    zIndex: 50,
+    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12,
+  }}>
+    {allDone && (
+      <div className="mono" style={{
+        fontSize: 10, letterSpacing: '0.26em', color: '#78716c',
+        textAlign: 'center',
+        animation: 'fadeUp 500ms cubic-bezier(.2,.8,.2,1) both',
+      }}>
+        ALL 14 QUESTIONS ON THE TABLE
+      </div>
+    )}
+    <button
+      onClick={onClick}
+      style={{
+        background: allDone
+          ? 'linear-gradient(135deg, #292524 0%, #44403c 100%)'
+          : 'rgba(28,25,23,0.07)',
+        color: allDone ? '#fff' : 'var(--ink)',
+        border: allDone ? 'none' : '1px solid rgba(28,25,23,0.2)',
+        borderRadius: 999,
+        padding: allDone ? '16px 40px' : '10px 22px',
+        fontSize: allDone ? 15 : 12,
+        fontWeight: 500, letterSpacing: '-0.01em',
+        fontFamily: "'Geist', sans-serif",
+        cursor: 'pointer',
+        display: 'flex', alignItems: 'center', gap: 10,
+        boxShadow: allDone
+          ? '0 0 40px rgba(41,37,36,0.18), 0 8px 32px rgba(0,0,0,0.15)'
+          : 'none',
+        transition: 'all 700ms cubic-bezier(.4,0,.2,1)',
+        backdropFilter: allDone ? 'none' : 'blur(8px)',
+        animation: allDone ? 'ctaPulse 2.5s ease-in-out infinite' : 'none',
+      }}
+      onMouseOver={e => {
+        e.currentTarget.style.transform = 'scale(1.05)';
+        e.currentTarget.style.boxShadow = '0 0 60px rgba(41,37,36,0.28), 0 12px 40px rgba(0,0,0,0.2)';
+      }}
+      onMouseOut={e => {
+        e.currentTarget.style.transform = 'scale(1)';
+        e.currentTarget.style.boxShadow = allDone
+          ? '0 0 40px rgba(41,37,36,0.18), 0 8px 32px rgba(0,0,0,0.15)'
+          : 'none';
+      }}
+    >
+      Explore our Responsible AI
+      <span style={{ fontSize: allDone ? 18 : 13, transition: 'font-size 700ms' }}>→</span>
+    </button>
+  </div>
+);
+
+// ─── Dot navigation ───────────────────────────────────────────────────────────
+const DotProgress = ({ scene, setScene }) => {
+  const step = scene >= 4 ? 3 : scene >= 3 ? 2 : scene >= 1 ? 1 : 0;
+  const sceneMap = [0, 1, 3, 4];
+
+  return (
+    <div style={{
+      position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)',
+      display: 'flex', alignItems: 'center', gap: 10,
+      zIndex: 60,
+    }}>
+      {Array.from({ length: 4 }, (_, i) => (
+        <div key={i} onClick={() => i !== step && setScene(sceneMap[i])} style={{
+          width: i === step ? 28 : 7,
+          height: 7, borderRadius: 99,
+          background: i === step ? '#1c1917' : i < step ? '#a8a29e' : '#d6cfc7',
+          transition: 'width 400ms cubic-bezier(.4,0,.2,1), background 400ms',
+          cursor: i !== step ? 'pointer' : 'default',
+        }} />
+      ))}
+    </div>
+  );
+};
+
+// ─── Root App ─────────────────────────────────────────────────────────────────
+const App = () => {
+  const [scene, setScene] = React.useState(0);
+  const [allQuestionsDone, setAllQuestionsDone] = React.useState(false);
+  const [grouping, setGrouping] = React.useState(false);
+
+  // Auto: 0 → 1
+  React.useEffect(() => {
+    if (scene === 0) {
+      const t = setTimeout(() => setScene(1), TIMING.holdHero);
+      return () => clearTimeout(t);
+    }
+  }, [scene]);
+
+  // Auto: 2 → 3
+  React.useEffect(() => {
+    if (scene === 2) {
+      const t = setTimeout(() => { setScene(3); setAllQuestionsDone(false); }, TIMING.exitDur + TIMING.blankGap);
+      return () => clearTimeout(t);
+    }
+  }, [scene]);
+
+  const handleTypedDone = React.useCallback(() => {
+    setTimeout(() => setScene(2), TIMING.holdTyped);
+  }, []);
+
+  const handleAllQuestionsDone = React.useCallback(() => {
+    setAllQuestionsDone(true);
+  }, []);
+
+  const handleExploreSolutions = () => {
+    setGrouping(true);
+    setTimeout(() => { setScene(4); setGrouping(false); }, 700);
+  };
+
+  // Keyboard: Tab → advance, Backspace → restart
+  React.useEffect(() => {
+    const h = (e) => {
+      if (e.key === 'Tab') {
+        e.preventDefault();
+        if (scene === 3) setAllQuestionsDone(true);
+        else setScene(s => Math.min(4, s + 1));
+      }
+      if (e.key === 'Backspace') { setScene(0); setAllQuestionsDone(false); setGrouping(false); }
+    };
+    window.addEventListener('keydown', h);
+    return () => window.removeEventListener('keydown', h);
+  }, [scene]);
+
+  return (
+    <div style={{ position:'relative', width:'100vw', minHeight:'100vh', overflow:'hidden' }}>
+      {/* Background grid */}
+      <div style={{
+        position: 'absolute', inset: 0,
+        backgroundImage: `linear-gradient(to right, rgba(0,0,0,0.04) 1px, transparent 1px),
+                          linear-gradient(to bottom, rgba(0,0,0,0.04) 1px, transparent 1px)`,
+        backgroundSize: '80px 80px',
+        maskImage: 'radial-gradient(ellipse at center, #000 30%, transparent 80%)',
+        WebkitMaskImage: 'radial-gradient(ellipse at center, #000 30%, transparent 80%)',
+      }} />
+
+      <TopBar />
+
+      <div style={{ position:'relative', width:'100%', height:'100vh', minHeight:820 }}>
+        <ResponsibleAIHero visible={scene === 0} />
+
+        <TypewriterPanel
+          active={scene === 1 || scene === 2}
+          exiting={scene === 2}
+          onDone={handleTypedDone}
+        />
+
+        {scene === 3 && (
+          <SequentialQuestions onAllDone={handleAllQuestionsDone} allDone={allQuestionsDone} />
+        )}
+
+        <ExploreCTA
+          visible={scene === 3 && !grouping}
+          allDone={allQuestionsDone}
+          onClick={handleExploreSolutions}
+        />
+
+        <SolutionsScreen visible={scene === 4 && !grouping} />
+      </div>
+
+      <DotProgress scene={scene} setScene={setScene} />
+    </div>
+  );
+};
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
